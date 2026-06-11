@@ -1,0 +1,11 @@
+# 每天洛杉磯時間 06:00 與 18:00 各跑一次（crontab -e 貼上，路徑請改成實際位置）
+# Amazon Linux / 大多數 Linux 的 cronie 支援 CRON_TZ
+CRON_TZ=America/Los_Angeles
+0 6,18 * * * /home/ec2-user/ai-news-daily/run.sh >> /home/ec2-user/ai-news-daily/logs/cron.log 2>&1
+
+# 開機（服務拉起）那一刻先跑一次，避免停機期間漏掉：
+# sleep 60 等網路就緒；--window 24 把停機期間的缺口一併補回
+@reboot sleep 60 && /home/ec2-user/ai-news-daily/run.sh --window 24 >> /home/ec2-user/ai-news-daily/logs/cron.log 2>&1
+
+# 若你的 cron 不支援 CRON_TZ，改用 UTC 對應時間（注意夏令時間切換時要調整）：
+# PDT（3-11 月）：0 13,1 * * *    PST（11-3 月）：0 14,2 * * *

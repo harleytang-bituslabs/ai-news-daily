@@ -1,0 +1,5 @@
+anthropic>=0.50
+feedparser>=6.0
+requests>=2.31
+openai>=1.60
+google-genai>=1.0

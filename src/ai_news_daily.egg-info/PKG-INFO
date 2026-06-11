@@ -1,3 +1,18 @@
+Metadata-Version: 2.4
+Name: ai-news-daily
+Version: 0.2.0
+Summary: Twice-daily AI news digest: multi-source fetch, dedupe, LLM summarization in Traditional Chinese
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: anthropic>=0.50
+Requires-Dist: openai>=1.60
+Requires-Dist: google-genai>=1.0
+Requires-Dist: feedparser>=6.0
+Requires-Dist: requests>=2.31
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+
 # 每日 AI 新聞日報（ai-news-daily）
 
 每 12 小時自動彙整 AI 圈最新消息，用 Claude 產出**繁體中文摘要 + 原文連結**的 Markdown 日報。
@@ -29,17 +44,16 @@ scp -r ai-news-daily ec2-user@<your-ec2>:~/
 # 2. 安裝（需要 Python 3.9+）
 cd ~/ai-news-daily
 python3 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/pip install -e .
+.venv/bin/pip install -r requirements.txt
 chmod +x run.sh
 
 # 3. 設定金鑰
 cp .env.example .env
-vi .env   # 填入 SUMMARIZER_MODEL 對應供應商的 API key
+vi .env   # 填入 ANTHROPIC_API_KEY
 
 # 4. 測試
-./run.sh --dry-run   # 只測試抓取，不花 API 錢
-./run.sh             # 完整跑一次，看 reports/latest.md
+.venv/bin/python main.py --dry-run   # 只測試抓取，不花 API 錢
+.venv/bin/python main.py             # 完整跑一次，看 reports/latest.md
 
 # 5. 排程（洛杉磯時間每天 06:00 / 18:00）
 crontab -e   # 貼上 crontab.example 的內容，路徑改成實際位置
@@ -60,39 +74,13 @@ crontab -e   # 貼上 crontab.example 的內容，路徑改成實際位置
 `google:gemini-3.5-flash`（$1.5/$9）。Codex 系列（最新為 `gpt-5.3-codex`）是 coding
 特化模型，不建議用於日報摘要。
 
-## 專案結構
-
-```
-src/ai_news/
-├── cli.py              # 命令列入口（ai-news / python -m ai_news）
-├── config.py           # Settings、ModelSpec（provider:model_id）
-├── models.py           # NewsItem、去重與排序
-├── pipeline.py         # 主流程：抓取 → 去重排序 → 存檔 → 摘要 → 輸出
-├── storage.py          # JSONL 原始素材存檔 + Markdown 日報輸出
-├── notify.py           # Slack 推送（要加 Telegram/Email 在這裡擴充）
-├── sources/            # 新聞來源（實作 Source 協定即可新增）
-│   ├── base.py         #   Source 協定 + 共用 HTTP / 文字工具
-│   ├── rss.py          #   官方 blog 與媒體 feed 清單
-│   ├── hackernews.py   #   HN Algolia API
-│   ├── reddit.py       #   Reddit RSS
-│   ├── github_trending.py
-│   └── hf_papers.py    #   HF Daily Papers
-└── summarize/
-    ├── prompt.py       # 日報的 system prompt（改格式/分類/語氣在這裡）
-    └── providers.py    # anthropic / openai / google 介接
-tests/                  # pytest 單元測試（CI 會跑 ruff + pytest）
-```
-
 ## 常用操作
 
 | 需求 | 做法 |
 |---|---|
-| 改抓取來源 | `src/ai_news/sources/rss.py`（feed 清單）或對應來源模組 |
-| 新增來源 | 實作 `Source` 協定，註冊到 `sources/__init__.py` 的 `default_sources()` |
-| 改時間窗 / 則數上限 | `./run.sh --window 24 --max-items 60` 或改 cron 指令 |
-| 改日報格式 / 分類 | `src/ai_news/summarize/prompt.py` |
-| 換摘要模型 | `.env` 的 `SUMMARIZER_MODEL` |
+| 改抓取來源 | 編輯 `sources.py` |
+| 改時間窗 / 則數上限 | `main.py --window 24 --max-items 60` 或改 cron 指令 |
+| 改日報格式 / 分類 | 編輯 `summarizer.py` 的 `SYSTEM_PROMPT` |
 | 推送到 Slack | `.env` 填 `SLACK_WEBHOOK_URL` |
 | 查看歷史日報 | `reports/` 目錄，一天兩份（am/pm） |
 | 查 cron 執行紀錄 | `logs/cron.log` |
-| 跑測試 / lint | `.venv/bin/pytest`、`.venv/bin/ruff check src tests` |

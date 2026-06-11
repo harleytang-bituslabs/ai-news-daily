@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-news-daily"
+version = "0.2.0"
+description = "Twice-daily AI news digest: multi-source fetch, dedupe, LLM summarization in Traditional Chinese"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "anthropic>=0.50",
+    "openai>=1.60",
+    "google-genai>=1.0",
+    "feedparser>=6.0",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.scripts]
+ai-news = "ai_news.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# 中文 prompt 文案不受行寬限制
+"src/ai_news/summarize/prompt.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 DEFAULT_MODEL_SPEC = "anthropic:claude-opus-4-8"
@@ -40,7 +40,7 @@ class Settings:
     window_hours: int = DEFAULT_WINDOW_HOURS
     max_items: int = DEFAULT_MAX_ITEMS
     timezone: str = DEFAULT_TIMEZONE
-    slack_webhook: str | None = None
+    slack_webhooks: list[str] = field(default_factory=list)
 
     @property
     def reports_dir(self) -> Path:
@@ -63,8 +63,16 @@ class Settings:
             window_hours=window_hours or DEFAULT_WINDOW_HOURS,
             max_items=max_items or DEFAULT_MAX_ITEMS,
             timezone=os.environ.get("REPORT_TZ", DEFAULT_TIMEZONE),
-            slack_webhook=os.environ.get("SLACK_WEBHOOK_URL"),
+            slack_webhooks=_parse_webhooks(
+                # SLACK_WEBHOOK_URLS（清單）優先，向下相容單數的 SLACK_WEBHOOK_URL
+                os.environ.get("SLACK_WEBHOOK_URLS") or os.environ.get("SLACK_WEBHOOK_URL") or ""
+            ),
         )
+
+
+def _parse_webhooks(raw: str) -> list[str]:
+    """逗號分隔的 webhook 清單 -> list（去空白、去空項）。"""
+    return [url.strip() for url in raw.split(",") if url.strip()]
 
 
 def load_dotenv(base_dir: Path) -> None:

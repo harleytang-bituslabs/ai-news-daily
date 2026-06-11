@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 from ai_news.config import Settings
 from ai_news.models import NewsItem, dedupe, rank
-from ai_news.notify import post_to_slack
+from ai_news.notify import broadcast_to_slack
 from ai_news.sources import Source, default_sources
 from ai_news.storage import Edition, archive_raw, write_report
 from ai_news.summarize import summarize
@@ -50,5 +50,5 @@ def run(settings: Settings, dry_run: bool = False) -> str | None:
     archive_raw(items, settings.raw_data_dir, edition)
     digest = summarize(items, edition.label, settings.model)
     write_report(digest, settings.reports_dir, edition, len(items))
-    post_to_slack(digest, settings.slack_webhook)
+    broadcast_to_slack(digest, settings.slack_webhooks)
     return digest

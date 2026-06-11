@@ -92,7 +92,7 @@ tests/                  # pytest 單元測試（CI 會跑 ruff + pytest）
 | 改時間窗 / 則數上限 | `./run.sh --window 24 --max-items 60` 或改 cron 指令 |
 | 改日報格式 / 分類 | `src/ai_news/summarize/prompt.py` |
 | 換摘要模型 | `.env` 的 `SUMMARIZER_MODEL` |
-| 推送到 Slack | `.env` 填 `SLACK_WEBHOOK_URL` |
+| 推送到 Slack（可多頻道） | `.env` 填 `SLACK_WEBHOOK_URLS`，多個 webhook 逗號分隔 |
 | 查看歷史日報 | `reports/` 目錄，一天兩份（am/pm） |
 | 查 cron 執行紀錄 | `logs/cron.log` |
 | 跑測試 / lint | `.venv/bin/pytest`、`.venv/bin/ruff check src tests` |

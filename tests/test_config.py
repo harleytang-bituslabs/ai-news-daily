@@ -26,6 +26,19 @@ def test_settings_from_env(monkeypatch, tmp_path):
     assert settings.reports_dir == tmp_path / "reports"
 
 
+def test_settings_parses_webhook_list(monkeypatch, tmp_path):
+    monkeypatch.setenv("SLACK_WEBHOOK_URLS", " https://hooks.example/a , https://hooks.example/b ,")
+    settings = Settings.from_env(tmp_path)
+    assert settings.slack_webhooks == ["https://hooks.example/a", "https://hooks.example/b"]
+
+
+def test_settings_falls_back_to_singular_webhook(monkeypatch, tmp_path):
+    monkeypatch.delenv("SLACK_WEBHOOK_URLS", raising=False)
+    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://hooks.example/only")
+    settings = Settings.from_env(tmp_path)
+    assert settings.slack_webhooks == ["https://hooks.example/only"]
+
+
 def test_load_dotenv_does_not_override_existing(monkeypatch, tmp_path):
     monkeypatch.setenv("FOO_KEY", "from-env")
     (tmp_path / ".env").write_text('FOO_KEY=from-file\nBAR_KEY="quoted"\n# comment\n')

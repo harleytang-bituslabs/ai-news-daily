@@ -44,11 +44,20 @@ vi .env   # 填入 ANTHROPIC_API_KEY
 crontab -e   # 貼上 crontab.example 的內容，路徑改成實際位置
 ```
 
-## 成本估算
+## 模型與成本
 
-每次執行約 20-30K input tokens、3-6K output tokens，以 Opus 4.8（$5/$25 per MTok）計算
-約 **$0.2-0.3／次，一天兩次 ≈ $12-18／月**。若想壓成本可把 `summarizer.py` 的 `MODEL`
-改成 `claude-sonnet-4-6`（約 6 折）或 `claude-haiku-4-5`（約 2 折），摘要品質會略降。
+摘要模型在 `.env` 的 `SUMMARIZER_MODEL` 一行切換（`provider:model_id`），三家都已接好並驗證過。
+每次執行約 25K input / 5K output tokens，各家頂規的成本：
+
+| 模型 | 定價（in/out per MTok） | 每次 | 每月（一天兩次） |
+|---|---|---|---|
+| `google:gemini-3.1-pro-preview` | $2 / $18 | ~$0.14 | **~$8（最便宜）** |
+| `anthropic:claude-opus-4-8` | $5 / $25 | ~$0.25 | ~$15 |
+| `openai:gpt-5.5` | $5 / $30 | ~$0.28 | ~$17 |
+
+更省的選項：`anthropic:claude-sonnet-4-6`（$3/$15）、`openai:gpt-5.2`（$1.75/$14）、
+`google:gemini-3.5-flash`（$1.5/$9）。Codex 系列（最新為 `gpt-5.3-codex`）是 coding
+特化模型，不建議用於日報摘要。
 
 ## 常用操作
 

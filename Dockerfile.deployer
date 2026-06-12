@@ -1,0 +1,6 @@
+# 自動部署 sidecar：docker CLI + compose + git，邏輯在 docker/deploy-loop.sh
+FROM docker:cli
+RUN apk add --no-cache git
+COPY docker/deploy-loop.sh /usr/local/bin/deploy-loop.sh
+RUN chmod +x /usr/local/bin/deploy-loop.sh
+ENTRYPOINT ["/usr/local/bin/deploy-loop.sh"]

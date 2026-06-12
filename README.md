@@ -45,6 +45,39 @@ vi .env   # 填入 SUMMARIZER_MODEL 對應供應商的 API key
 crontab -e   # 貼上 crontab.example 的內容，路徑改成實際位置
 ```
 
+## Docker 部署（含 GitHub 自動重新部署）
+
+不想管 venv 和 crontab 的話，用 Docker 一鍵拉起兩個常駐容器：
+
+- **app**：內建 supercronic 排程，LA 時間每天 06:00 / 18:00 各跑一次日報
+- **deployer**：每 60 秒輪詢 GitHub `origin/main`，有新提交就自動 `git pull --ff-only` 並重建 app 容器（push 到 GitHub ≈ 自動部署）
+
+```bash
+cd ~/ai-news-daily
+
+# 1. 設定金鑰（.env 已建好佔位，填 API key 與 Slack webhook）
+vi .env
+
+# 2. 先建好產物目錄（避免 compose 以 root 建立導致權限問題）
+mkdir -p reports data logs
+
+# 3. 測試（不花 API 錢、不發 Slack）
+docker compose run --rm app python -m ai_news --base-dir /app --dry-run
+
+# 4. 正式拉起
+docker compose up -d --build
+docker compose ps                  # 兩個容器都應為 Up
+docker compose logs -f app        # 排程與日報執行日誌
+docker compose logs -f deployer   # 自動部署日誌
+```
+
+注意事項：
+
+- deployer 用 `git pull --ff-only`：伺服器上若有未提交的本地改動且與遠端分叉，自動部署會跳過並在日誌報錯，不會清掉你的工作區。
+- `docker-compose.yml` 裡 deployer 的掛載路徑寫死為 `/home/ubuntu/release/ai-news-daily`，換機器部署要同步改。
+- app 的 `RUN_ON_START` 環境變數設為 `"1"` 時，容器每次啟動會先用 24 小時窗回補一次（對齊 crontab 的 `@reboot` 行為）。預設關閉——自動部署會頻繁重啟容器，開著會重複耗 API 並重複推送。
+- 容器以 uid 1000（ubuntu）執行，`reports/`、`data/`、`logs/` 產物落在宿主機且所有權不變。
+
 ## 模型與成本
 
 摘要模型在 `.env` 的 `SUMMARIZER_MODEL` 一行切換（`provider:model_id`），三家都已接好並驗證過。

@@ -1,0 +1,37 @@
+# docker compose up -d --build 一鍵拉起：
+#   app      —— 常駐排程容器，LA 時間 06:00 / 18:00 各跑一次日報
+#   deployer —— 輪詢 GitHub origin/main，有新提交自動 pull + 重建 app
+services:
+  app:
+    build: .
+    image: ai-news-daily:latest
+    restart: unless-stopped
+    env_file: .env
+    # 與宿主機 ubuntu 同 uid，產物（reports/data/logs）不會變 root 所有
+    user: "1000:1000"
+    environment:
+      HOME: /tmp
+      # 設為 "1" 則容器啟動時先回補 24 小時窗口（會耗 API、發 Slack，預設關）
+      RUN_ON_START: "0"
+    volumes:
+      - ./reports:/app/reports
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  deployer:
+    build:
+      context: .
+      dockerfile: Dockerfile.deployer
+    image: ai-news-daily-deployer:latest
+    restart: unless-stopped
+    # uid 1000 = 宿主機 ubuntu（git 拉取的檔案保持原所有者）；gid 999 = docker 組（可用 socket）
+    user: "1000:999"
+    environment:
+      HOME: /tmp
+      REPO_DIR: /home/ubuntu/release/ai-news-daily
+      BRANCH: main
+      POLL_INTERVAL: "60"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 掛到與宿主機相同路徑，deployer 內執行 docker compose 時相對路徑才能正確解析
+      - /home/ubuntu/release/ai-news-daily:/home/ubuntu/release/ai-news-daily

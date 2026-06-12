@@ -1,0 +1,2 @@
+# 容器內排程（TZ=America/Los_Angeles，由鏡像 ENV 決定），對齊 crontab.example
+0 6,18 * * * python -m ai_news --base-dir /app

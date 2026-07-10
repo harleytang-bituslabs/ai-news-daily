@@ -7,7 +7,7 @@ from pathlib import Path
 
 DEFAULT_MODEL_SPEC = "anthropic:claude-opus-4-8"
 DEFAULT_WINDOW_HOURS = 13  # 12 小時排程 + 1 小時緩衝
-DEFAULT_MAX_ITEMS = 40
+DEFAULT_MAX_ITEMS = 55  # 40 基礎新聞 + follow-builders 的推文/Podcast/blog（僅早班有）
 DEFAULT_TIMEZONE = "America/Los_Angeles"
 
 PROVIDERS = ("anthropic", "openai", "google")

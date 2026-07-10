@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from ai_news.sources.base import Source
+from ai_news.sources.follow_builders import follow_builders_sources
 from ai_news.sources.github_trending import GitHubTrendingSource
 from ai_news.sources.hackernews import HackerNewsSource
 from ai_news.sources.hf_papers import HFPapersSource
@@ -16,4 +17,5 @@ def default_sources() -> list[Source]:
         *DEFAULT_SUBREDDITS,
         GitHubTrendingSource(),
         HFPapersSource(),
+        *follow_builders_sources(),
     ]

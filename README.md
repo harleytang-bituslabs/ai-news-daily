@@ -11,12 +11,21 @@
    - Reddit（RSS 端點）：r/LocalLLaMA、r/MachineLearning、r/artificial
    - **GitHub Trending**（每日熱榜前 15 個 repo，非 AI 項目由 Claude 過濾）
    - **Hugging Face Daily Papers**（社群票選的每日熱門論文前 10 篇 → 日報「📄 今日論文」章節）
+   - **AI Builders 推文**（Karpathy、sama、swyx 等 26 位 builder 的 X/Twitter，按讚數取前 20 →
+     日報「🧑‍💻 Builders 動態」章節）
+   - **Podcast**（Latent Space、No Priors 等 6 檔節目，含 transcript 摘錄，依內容歸入對應章節）
+   - **Anthropic Engineering / Claude Blog**（官方 blog，補上 Anthropic 無公開 RSS 的缺口）
+
+   後三類不自己抓：直接消費 [follow-builders](https://github.com/zarazhangrui/follow-builders)
+   的 GitHub Actions 每天預生成的 feed JSON（公開 raw URL、零金鑰；X API 與 pod2txt 轉錄由上游代勞）。
+   上游一天生成一次，以 feed 的 generatedAt 做整包門控，內容每天恰好隨一班日報出現（正常為早班）。
 2. **存檔**：原始素材寫入 `data/raw/YYYY-MM-DD-{am,pm}.jsonl`（之後打標／embedding／建向量庫的資料底座）
-3. **去重排序**：URL 去重，依「官方來源 > 媒體/GitHub/論文 > 社群」取前 40 則
+3. **去重排序**：URL 去重，依「官方來源 > 媒體/GitHub/論文/推文 > 社群」取前 55 則
 4. **摘要**：呼叫 Claude（`claude-opus-4-8`）產出分類好的繁體中文日報
 5. **輸出**：`reports/YYYY-MM-DD-{am,pm}.md`，並更新 `reports/latest.md`；有設 Slack webhook 就順便推送
 
-> Anthropic、Meta、Microsoft 官方都沒有可用的公開 RSS，但其發布幾乎必上 HN 與 TechCrunch/The Verge，已被覆蓋。
+> Meta、Microsoft 官方沒有可用的公開 RSS，但其發布幾乎必上 HN 與 TechCrunch/The Verge，已被覆蓋；
+> Anthropic 官方內容已由 follow-builders feed（Anthropic Engineering / Claude Blog）直接補上。
 > 想加減來源，改 `sources.py` 即可。
 > crontab 內含 `@reboot` 條目：機器（服務）拉起來那一刻會先跑一次、並用 24 小時窗回補停機缺口。
 
@@ -109,7 +118,8 @@ src/ai_news/
 │   ├── hackernews.py   #   HN Algolia API
 │   ├── reddit.py       #   Reddit RSS
 │   ├── github_trending.py
-│   └── hf_papers.py    #   HF Daily Papers
+│   ├── hf_papers.py    #   HF Daily Papers
+│   └── follow_builders.py  # Builders 推文 / Podcast / Anthropic&Claude blog（上游預生成 feed）
 └── summarize/
     ├── prompt.py       # 日報的 system prompt（改格式/分類/語氣在這裡）
     └── providers.py    # anthropic / openai / google 介接
